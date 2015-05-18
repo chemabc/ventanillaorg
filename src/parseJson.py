@@ -124,7 +124,59 @@ except:
     print("Error al abrir el archivo:", dataCpAndResultsFile)
 
 
-# CALCULO DE MEDIAS DE TIEMPO DE RECHAZO EN FUNCIÓN DE SU RAZON
+# CALCULO DE PORCENTAJES ACIERTO Y ERROR y DIVISION POR TRAMITES
+print(format(p_data))
+groupByResultado= p_data.groupby(['resultado'])
+print("GROUPS: ", groupByResultado.groups)
+groupsByResultado = dict(list(groupByResultado))
+g_ok = groupsByResultado['ok']
+g_fail = groupsByResultado['fail']
+numTotal = len(p_data)
+numFail = len(g_fail)
+numOk = len(g_ok)
+print(groupsByResultado['fail'])
+print("Total: ", numTotal)
+print("%Fail: ", numFail/numTotal)
+print("%Ok: ", numOk/numTotal)
+groupByReject = g_fail.groupby("rejreason")
+print("G_FAIL num: ", g_fail.describe())
+print("groupByReject: ", groupByReject.size())
+print(groupByReject.count())
+jsonRej = [{"name": rejreason, "val": (int(value*1000/numFail))/10} for rejreason, value in groupByReject.size().iteritems()]
+print(jsonRej)
+jsonSummary = [ {"name": resultado, "val": (int(value*1000/numTotal))/10 }for resultado, value  in groupByResultado.size().iteritems()]
+print(jsonSummary)
 
-   
 
+finalList = []
+
+print("G_fail:" , g_fail)
+print("BUCLE:")
+for row in jsonSummary:
+    if(row['name'] == 'fail'):
+        for row2 in jsonRej:
+            row2['children']=[]
+            finalList.append(row2)
+        row['children'] = finalList
+        print(row)
+    else:
+        row['children'] = []
+            #row[row2]
+            #print(row)
+            
+listRows = []
+for row in jsonSummary:
+    listRows.append(row)
+    
+jsonTotal = {'name':'root', 'val':0, 'children':listRows}
+
+
+print(jsonTotal)
+dataResultsFile = '../data/dataResults.json'
+jsonSummaryFriend = json.dumps(jsonTotal)#jsonFriendHormonado.json(orient= 'index')
+print(jsonSummaryFriend)
+try:
+    with(open(dataResultsFile, 'w')) as outfile:
+        json.dump(jsonTotal, outfile)
+except:
+    print("Error al abrir el archivo:", dataResultsFile)
